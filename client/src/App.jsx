@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import BackgroundVideo from './components/BackgroundVideo';
+import BackgroundMusic from './components/BackgroundMusic';
 import Thoughts from './components/Thoughts';
 
 function App() {
@@ -62,6 +63,7 @@ function App() {
   return (
     <>
       <BackgroundVideo />
+      <BackgroundMusic />
 
       {/* Показываем бренд и портрет, контролируя видимость через классы (fade) */}
       <>

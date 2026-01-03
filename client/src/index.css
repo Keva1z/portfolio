@@ -64,8 +64,8 @@ body {
 /* ------------------ Верхний центр — бренд (glowing title) ------------------ */
 .site-brand {
     position: fixed;
-    top: 10vh;
-    /* отступ сверху 10% от экрана */
+    top: 5vh;
+    /* отступ сверху поднят на 10-15% */
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -116,6 +116,7 @@ body {
     opacity: 0.95;
     text-align: center;
     text-shadow: 0 0 6px rgba(255, 255, 255, 0.12);
+    animation: glow 4s ease-in-out infinite;
 }
 
 @keyframes glow {
@@ -323,6 +324,13 @@ body {
     color: rgba(255, 255, 255, 0.85);
     text-align: left;
     word-spacing: 0.05em;
+}
+
+/* ПК версия: поднимаем текст еще выше */
+@media (min-width: 901px) {
+    .site-brand {
+        top: 2vh;
+    }
 }
 
 /* responsive: stack vertically on small screens */
