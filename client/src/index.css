@@ -1,0 +1,669 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* фон видео — фиксирован и занимает весь экран */
+.bg-video-wrap {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    /* above page background so video is visible */
+    overflow: hidden;
+    pointer-events: none;
+    /* не мешает кликам */
+}
+
+/* Видео покрывает экран, обрезается по размеру */
+.bg-video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    transform: translate(-50%, -50%);
+    object-fit: cover;
+}
+
+/* Оверлей для контраста (можно настраивать) — теперь выше видео */
+.bg-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.5));
+}
+
+/* ensure page background doesn't hide video */
+html,
+body {
+    background: transparent;
+}
+
+/* Ваш контент должен иметь более высокий z-index */
+.site-content {
+    position: relative;
+    z-index: 10;
+}
+
+/* Если пользователь предпочитает меньше анимаций — скрываем видео */
+@media (prefers-reduced-motion: reduce) {
+
+    .bg-video-wrap,
+    .bg-overlay {
+        display: none;
+    }
+
+    body {
+        background: #0b1220;
+        /* fallback цвет или статическое изображение */
+    }
+}
+
+/* ------------------ Верхний центр — бренд (glowing title) ------------------ */
+.site-brand {
+    position: fixed;
+    top: 10vh;
+    /* отступ сверху 10% от экрана */
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.125rem;
+    z-index: 20;
+    /* поверх оверлея и видео */
+    pointer-events: none;
+    /* не мешает кликам */
+    user-select: none;
+
+    /* default hidden for fade transitions */
+    opacity: 0;
+    transform: translateX(-50%) translateY(-8px);
+    transition: opacity 420ms ease, transform 420ms cubic-bezier(.2, .9, .2, 1);
+}
+
+.site-brand--visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.site-brand--hidden {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-8px);
+}
+
+.site-brand__title {
+    margin: 0;
+    color: #ffffff;
+    font-weight: 800;
+    line-height: 1;
+    /* адаптивный размер: от 2rem до 6rem, через vw */
+    font-size: clamp(2rem, 7vw, 6rem);
+    letter-spacing: -0.02em;
+    text-align: center;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.85), 0 0 24px rgba(0, 150, 255, 0.18);
+    /* лёгкая анимация свечения */
+    animation: glow 4s ease-in-out infinite;
+}
+
+.site-brand__subtitle {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: clamp(0.9rem, 2vw, 1.25rem);
+    letter-spacing: 0.02em;
+    opacity: 0.95;
+    text-align: center;
+    text-shadow: 0 0 6px rgba(255, 255, 255, 0.12);
+}
+
+@keyframes glow {
+
+    0%,
+    100% {
+        text-shadow: 0 0 6px rgba(255, 255, 255, 0.9), 0 0 18px rgba(0, 150, 255, 0.12);
+    }
+
+    50% {
+        text-shadow: 0 0 14px rgba(255, 255, 255, 0.95), 0 0 34px rgba(0, 150, 255, 0.22);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .site-brand,
+    .site-brand__title {
+        animation: none;
+        transition: none;
+        text-shadow: 0 0 8px rgba(255, 255, 255, 0.85);
+    }
+}
+
+/* ------------------ Портрет (в полный рост) и поведение при смене слайда ------------------ */
+.site-photo {
+    position: fixed;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%) translateY(0);
+    z-index: 2;
+    transition: opacity 420ms ease, transform 520ms cubic-bezier(.2, .9, .2, 1);
+    pointer-events: none;
+    /* полностью неинтерактивно */
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    width: 100vw;
+    /* full viewport width */
+    height: clamp(280px, 85vh, 1000px);
+    /* height-based sizing only */
+    overflow: visible;
+    opacity: 0;
+    /* hidden by default */
+}
+
+.site-photo--visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.site-photo--hidden {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+}
+
+.site-photo__img {
+    height: 100%;
+    width: auto;
+    object-fit: contain;
+    display: block;
+    border-radius: 0;
+    /* keep original PNG silhouette */
+    box-shadow: none;
+    /* no outline or shadow */
+    transition: transform 600ms cubic-bezier(.2, .9, .2, 1), filter 300ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .site-photo,
+    .site-photo__img {
+        animation: none;
+        transition: none;
+    }
+}
+
+/* ------------------ Слайды / презентация (scroll-snap) ------------------ */
+.slides {
+    height: 100vh;
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+.slide {
+    min-height: 100vh;
+    scroll-snap-align: start;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem;
+}
+
+.slide--hero {
+    /* пустое — фон виден; можно добавить центрованный контейнер */
+}
+
+.slide-inner {
+    max-width: 900px;
+    color: #fff;
+    text-align: center;
+}
+
+.slide h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem
+}
+
+.slide p {
+    opacity: 0.9
+}
+
+/* стилизуем полосу прокрутки для удобства */
+.slides::-webkit-scrollbar {
+    width: 10px
+}
+
+.slides::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 10px
+}
+
+/* ------------------ About: stacks and layout ------------------ */
+.about {
+    display: grid;
+    grid-template-columns: 1fr minmax(320px, 720px) 1fr 1fr;
+    gap: 2.5rem;
+    align-items: center;
+}
+
+.tech-stack {
+    position: relative;
+}
+
+.tech-label {
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    color: rgba(255, 255, 255, 0.92);
+    text-align: center;
+}
+
+.tech-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    align-items: center;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.tech-badge {
+    position: relative;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, rgba(0, 150, 255, 0.14), rgba(0, 200, 150, 0.08));
+    border: 1px solid rgba(0, 150, 255, 0.22);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.95);
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0, 150, 255, 0.06);
+    transition: all 300ms ease;
+}
+
+.tech-badge:hover {
+    background: linear-gradient(135deg, rgba(0, 150, 255, 0.22), rgba(0, 200, 150, 0.12));
+    box-shadow: 0 4px 16px rgba(0, 150, 255, 0.12);
+}
+
+/* vertical connecting line between tech items */
+.tech-badge::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -0.65rem;
+    width: 1px;
+    height: 0.65rem;
+    background: linear-gradient(to bottom, rgba(0, 150, 255, 0.3), rgba(0, 150, 255, 0.1));
+    transform: translateX(-0.5px);
+}
+
+/* remove line from last item */
+.tech-badge:last-child::after {
+    content: none;
+}
+
+.tech-general {
+    margin-top: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 600;
+}
+
+.about-center h2 {
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+    margin-bottom: 1.2rem;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.about-center p {
+    font-size: 0.975rem;
+    line-height: 1.75;
+    color: rgba(255, 255, 255, 0.85);
+    text-align: left;
+    word-spacing: 0.05em;
+}
+
+/* responsive: stack vertically on small screens */
+@media (max-width: 900px) {
+    .about {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto auto;
+        gap: 1.5rem;
+        text-align: center;
+    }
+
+    /* reorder on mobile: Other, About text, Python, TypeScript */
+    .about-left {
+        order: 1;
+    }
+
+    .about-center {
+        order: 2;
+    }
+
+    .about-center h2 {
+        margin-top: 0;
+    }
+
+    .about-center p {
+        line-height: 1.7;
+        font-size: 0.95rem;
+        max-width: 100%;
+    }
+
+    .about-right:nth-of-type(1) {
+        order: 3;
+    }
+
+    .about-right:nth-of-type(2) {
+        order: 4;
+    }
+
+    /* inline tech stacks on mobile */
+    .tech-stack {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .tech-label {
+        min-width: auto;
+        text-align: center;
+        width: 100%;
+        order: -1;
+    }
+
+    .tech-list {
+        gap: 0.5rem;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .tech-badge {
+        padding: 0.45rem 0.9rem;
+        font-size: 0.85rem;
+    }
+
+    .tech-badge::after {
+        display: none;
+    }
+}
+
+/* ------------------ Project card and buttons ------------------ */
+.project-card {
+    background: rgba(255, 255, 255, 0.02);
+    padding: 1.25rem;
+    border-radius: 12px;
+    display: inline-block;
+    text-align: center;
+}
+
+.project-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 700;
+    color: inherit;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.03);
+    transition: all 300ms ease;
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+.btn--primary {
+    background: linear-gradient(90deg, rgba(0, 150, 255, 0.18), rgba(0, 200, 150, 0.08));
+    border-color: rgba(0, 150, 255, 0.3);
+}
+
+.btn--primary:hover {
+    background: linear-gradient(90deg, rgba(0, 150, 255, 0.28), rgba(0, 200, 150, 0.14));
+    border-color: rgba(0, 150, 255, 0.4);
+}
+
+.btn--outline {
+    background: transparent;
+}
+
+.btn--outline:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.btn--ghost {
+    background: transparent;
+    opacity: 0.95;
+}
+
+.btn--ghost:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* ------------------ Contacts icons and links ------------------ */
+.contacts-list {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    align-items: center;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.contact-link {
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 1rem;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.02);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 300ms ease;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.contact-link:hover {
+    background: rgba(0, 150, 255, 0.12);
+    border-color: rgba(0, 150, 255, 0.22);
+    transform: translateY(-2px);
+}
+
+.contact-icon {
+    opacity: 0.95;
+    display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .btn,
+    .site-brand,
+    .site-photo,
+    .contact-link {
+        transition: none
+    }
+}
+
+/* ------------------ Concept slide (Thoughts from Telegram) ------------------ */
+.concept-diagram {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin: 2rem 0;
+    flex-wrap: wrap;
+}
+
+.concept-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, rgba(0, 150, 255, 0.12), rgba(0, 200, 150, 0.06));
+    border: 1px solid rgba(0, 150, 255, 0.2);
+    border-radius: 8px;
+    min-width: 100px;
+}
+
+.concept-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: rgba(0, 150, 255, 0.3);
+    border-radius: 50%;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.concept-arrow {
+    font-size: 1.5rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.backend-info {
+    margin-top: 2rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.backend-info h3 {
+    margin-bottom: 1rem;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.code-block {
+    background: rgba(10, 20, 40, 0.5);
+    border: 1px solid rgba(0, 150, 255, 0.2);
+    border-radius: 6px;
+    padding: 1.25rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: rgba(0, 200, 150, 0.95);
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* ------------------ Thoughts container and cards ------------------ */
+.thoughts-container {
+    max-width: 700px;
+    margin: 2rem auto;
+}
+
+.thoughts-loading,
+.thoughts-error,
+.thoughts-empty {
+    text-align: center;
+    padding: 2rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1rem;
+}
+
+.thoughts-error {
+    background: rgba(255, 100, 100, 0.08);
+    border: 1px solid rgba(255, 100, 100, 0.2);
+    border-radius: 8px;
+}
+
+.thoughts-retry {
+    margin-top: 1rem;
+    padding: 0.6rem 1.2rem;
+    background: rgba(255, 100, 100, 0.2);
+    border: 1px solid rgba(255, 100, 100, 0.3);
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 300ms ease;
+}
+
+.thoughts-retry:hover {
+    background: rgba(255, 100, 100, 0.3);
+    border-color: rgba(255, 100, 100, 0.4);
+}
+
+.thoughts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.thought-card {
+    padding: 1.25rem;
+    background: linear-gradient(135deg, rgba(0, 150, 255, 0.08), rgba(0, 200, 150, 0.04));
+    border: 1px solid rgba(0, 150, 255, 0.15);
+    border-radius: 10px;
+    transition: all 300ms ease;
+}
+
+.thought-card:hover {
+    background: linear-gradient(135deg, rgba(0, 150, 255, 0.12), rgba(0, 200, 150, 0.08));
+    border-color: rgba(0, 150, 255, 0.25);
+    box-shadow: 0 6px 20px rgba(0, 150, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.thought-text {
+    margin: 0 0 0.75rem 0;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.95);
+    word-break: break-word;
+}
+
+.thought-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.thought-meta time {
+    font-size: 0.85rem;
+    color: rgba(0, 150, 255, 0.8);
+    font-family: 'Courier New', monospace;
+}
+
+.thoughts-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 600px) {
+    .thought-card {
+        padding: 1rem;
+    }
+
+    .thought-text {
+        font-size: 0.95rem;
+    }
+}
